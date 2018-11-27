@@ -1,0 +1,16 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["src/dev"
+  "src/main"
+  "src/test"]
+
+ :dependencies
+ []
+
+ :builds
+ {:breakout
+  :target :browser
+  :modules {:main {:init-fn zenathark.breakout.main/init}}
+  :devtools
+  {:http-root "public"
+   :http-port "8000"}}}

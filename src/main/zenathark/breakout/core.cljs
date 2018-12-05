@@ -1,35 +1,32 @@
 (ns zenathark.breakout.core
-  [:require [phaser :refer [Game AUTO]]])
+  (:require [zenathark.breakout.clophaz :as ph]))
 
-(def ^:private preload-fn (atom (fn [] 1)))
-(def ^:private create-fn (atom (fn [] 1)))
+(def main-config {:type ph/auto
+                  :width 800
+                  :height 600
+                  :physics {:default :arcade
+                            :arcade {:gravity {:y 200}}}
+                  :scene {:preload (fn [this]
+                                     (doto (.. this -load)
+                                           (.setBaseURL "http://labs.phaser.io")
+                                           (.image "sky" "assets/skies/space3.png")
+                                           (.image "logo" "assets/sprites/phaser3-logo.png")
+                                           (.image "red" "assets/particles/red.png")))
+                          :create (fn [this]
+                                    (.. this -add (image 400 300 "sky"))
+                                    (let [particles (.. this -add (particles "red"))
+                                          emitter (.createEmitter particles (clj->js {:speed 100
+                                                                                      :scale {:start 1
+                                                                                              :end 0}
+                                                                                      :blendMode "ADD"}))
+                                          logo (.. this -physics -add (image 400 100 "logo"))]
+                                      (.setVelocity logo 100 200)
+                                      (.setBounce logo 1 1)
+                                      (.setCollideWorldBounds logo true)
+                                      (.startFollow emitter logo)))}})
 
-(defn ^:export preload
+(defn init
+  "Main function, intented to be called by phaser"
   []
-  (@preload-fn))
-
-(defn ^:export create
-  []
-  (@create-fn))
-
-(defn fn->js
-  "Translates a clojure anonymous function to an js invocable symbol"
-  [func]
-  (cond
-    (fn? func) (type func)
-    :else func))
-
-(defn config->js
-  "Takes a clojure map and returns a valid js phaser configuration"
-  [config]
-  (let [preload (:preload config)
-        create (:create config)
-        jsconfig (clj->js config)]
-    (aset jsconfig "preload" (fn->js preload))
-    (aset jsconfig "create" (fn->js create))
-    jsconfig))
-
-(defn create-game
-  "Creates a phazer game object"
-  [config]
-  (Game. (config->js config)))
+  (let [game (ph/create-game main-config)]
+    (println "Game Begins")))
